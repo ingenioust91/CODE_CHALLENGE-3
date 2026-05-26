@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useMemo } from 'react'
 
 // Issue 1: Inline API key (security issue)
 // ✨move API_KEY to .env -> use import.meta.env for vite
@@ -52,7 +52,6 @@ function App() {
   }
   
   // Issue 7: Tidak ada error handling
-  //✨ handling error
   const deleteTodo = (id) => {
     setTodos(todos.filter(todo => todo.id !== id))
     
@@ -64,8 +63,8 @@ function App() {
     ))
   }
   
-  // Issue 8: Logic filtering yang bisa dipindah ke useMemo
-  const getFilteredTodos = () => {
+  // ✨ Issue 8: Logic filtering yang bisa dipindah ke useMemo
+  const getFilteredTodos = useMemo(()=>{
     if (filter === 'active') {
       return todos.filter(todo => !todo.completed)
     }
@@ -73,14 +72,17 @@ function App() {
       return todos.filter(todo => todo.completed)
     }
     return todos
-  }
+  },[todos, filter])
   
   // Issue 9: Calculation yang tidak perlu di setiap render
-  const stats = {
-    total: todos.length,
-    completed: todos.filter(t => t.completed).length,
-    active: todos.filter(t => !t.completed).length
-  }
+  // ✨ useMemo for calculation -> only runs when todos changes
+  const stats = useMemo(() => {
+    return {
+      total: todos.length,
+      completed: todos.filter(t => t.completed).length,
+      active: todos.filter(t => !t.completed).length
+    }
+  }, [todos])
 
   const handleEnter = (e)=> {
   if (e.key === 'Enter') {
@@ -115,28 +117,28 @@ function App() {
           onClick={() => setFilter('all')}
           className={filter === 'all' ? 'btn-active' : 'btn'}
         >
-          All
+          All To Do
         </button>
         <button 
           onClick={() => setFilter('active')}
           className={filter === 'active' ? 'btn-active' : 'btn'}
         >
-          Active
+          Active To Do
         </button>
         <button 
           onClick={() => setFilter('completed')}
           className={filter === 'completed' ? 'btn-active' : 'btn'}
         >
-          Completed
+          Completed To Do
         </button>
       </div>
       
       <div className='todo-list'>
         {/* Issue 13: Tidak ada handling untuk empty state */}
         {/* ✨add condition : length must be > 0 to render todos*/}
-        {todos.length==0 && <p>Nothing to do</p>}
-        {todos.length > 0  && getFilteredTodos().map((todo) => (
-          // Issue 14: Key menggunakan index bisa lebih baik dengan ID
+        {getFilteredTodos.length==0 && <p>Nothing to do</p>}
+        {getFilteredTodos.length > 0  && getFilteredTodos.map((todo) => (
+          // ✨Issue 14: Key menggunakan index bisa lebih baik dengan ID
           <div key={todo.id} className={`todo-item ${todo.completed ? 'completed' : ''}`}>
             <input 
               type="checkbox"

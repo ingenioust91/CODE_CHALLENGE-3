@@ -74,6 +74,13 @@ button:hover {
   color: white;
 }
 
+.todo-list {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-direction: column;
+}
+
 .todo-item {
   display: flex;
   align-items: center;

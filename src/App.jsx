@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react'
 
 // Issue 1: Inline API key (security issue)
-// move API_KEY to .env -> use import.meta.env for vite
+// ✨move API_KEY to .env -> use import.meta.env for vite
 const API_KEY = import.meta.env.VITE_API_KEY
 
 function App() {
@@ -9,20 +9,26 @@ function App() {
   const [todos, setTodos] = useState([])
   const [input, setInput] = useState('')
   const [filter, setFilter] = useState('all')
-
-  console.log('API Key:', API_KEY)
   
   // Issue 3: useEffect tanpa dependency array yang tepat
+  //✨ handling error JSON parse
   useEffect(() => {
-    // Load from localStorage
-    const saved = localStorage.getItem('todos')
-    if (saved) {
-      setTodos(JSON.parse(saved))
+    try {
+      const saved = localStorage.getItem('todos')
+
+      if (saved) {
+        setTodos(JSON.parse(saved))
+      }
+    } catch (error) {
+      console.error('Failed to load todos', error)
     }
   }, [])
   
   // Issue 4: useEffect yang terlalu sering run
-
+  //✨ add dependency : todos
+  useEffect(()=>{
+    localStorage.setItem('todos', JSON.stringify(todos))
+  },[todos])
   
   // Issue 5: Function yang tidak di-memoize, re-create setiap render
   const addTodo = () => {
@@ -32,21 +38,24 @@ function App() {
     }
     
     // Issue 6: Menggunakan Date.now() sebagai ID (bisa collision)
+    //✨use UUID
     const newTodo = {
-      id: Date.now(),
+      id: crypto.randomUUID(),
       text: input,
       completed: false,
       createdAt: new Date().toISOString()
     }
     
     setTodos([...todos, newTodo])
-    localStorage.setItem('todos', JSON.stringify(todos))
+    
     setInput('')
   }
   
   // Issue 7: Tidak ada error handling
+  //✨ handling error
   const deleteTodo = (id) => {
     setTodos(todos.filter(todo => todo.id !== id))
+    
   }
   
   const toggleTodo = (id) => {
@@ -72,31 +81,35 @@ function App() {
     completed: todos.filter(t => t.completed).length,
     active: todos.filter(t => !t.completed).length
   }
-  
+
+  const handleEnter = (e)=> {
+  if (e.key === 'Enter') {
+      addTodo()
+    }
+  }
+    
   // Issue 10: Inline event handler dengan arrow function (re-create setiap render)
+  // ✨ move Inline event handler to function
   return (
     <div className="app">
       <h1>My Todo List</h1>
       
-      {/* Issue 11: Tidak ada label untuk accessibility */}
+      {/* ✨ Issue 11: Tidak ada label untuk accessibility */}
       <div className="input-section">
-        <label>To Do :</label>
+        <label htmlFor="todo-input">To Do :</label>
         <input 
+          id="todo-input"
           type="text"
           value={input}
           onChange={(e) => setInput(e.target.value)}
-          onKeyPress={(e) => {
-            if (e.key === 'Enter') {
-              addTodo()
-            }
-          }}
+          onKeyPress={handleEnter}
           placeholder="What needs to be done?"
         />
         <button onClick={addTodo}>Add</button>
       </div>
       
       {/* Issue 12: Inline styles (inconsistent dengan CSS file) */}
-      {/* move all style to CSS file */}
+      {/* ✨move all style to CSS file */}
       <div className='button-grup-style'>
         <button 
           onClick={() => setFilter('all')}
@@ -118,10 +131,11 @@ function App() {
         </button>
       </div>
       
-      <div className="todo-list">
+      <div className='todo-list'>
         {/* Issue 13: Tidak ada handling untuk empty state */}
-        {/* add condition : length must be > 0 to render getFilteredTodos*/}
-        {getFilteredTodos.length > 0  && getFilteredTodos().map((todo) => (
+        {/* ✨add condition : length must be > 0 to render todos*/}
+        {todos.length==0 && <p>Nothing to do</p>}
+        {todos.length > 0  && getFilteredTodos().map((todo) => (
           // Issue 14: Key menggunakan index bisa lebih baik dengan ID
           <div key={todo.id} className={`todo-item ${todo.completed ? 'completed' : ''}`}>
             <input 
@@ -130,7 +144,9 @@ function App() {
               onChange={() => toggleTodo(todo.id)}
             />
             {/* Issue 15: Potential XSS jika text dari user input */}
-            <span dangerouslySetInnerHTML={{ __html: todo.text }} />
+            {/* ✨using {} -> JavaScript expression in JSX*/}
+            <span>{todo.text}</span>
+
             <button 
               className="delete-btn"
               onClick={() => deleteTodo(todo.id)}

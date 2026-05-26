@@ -1,13 +1,16 @@
 import { useState, useEffect } from 'react'
 
 // Issue 1: Inline API key (security issue)
-const API_KEY = 'sk-1234567890abcdef'
+// move API_KEY to .env -> use import.meta.env for vite
+const API_KEY = import.meta.env.VITE_API_KEY
 
 function App() {
   // Issue 2: State management bisa lebih baik
   const [todos, setTodos] = useState([])
   const [input, setInput] = useState('')
   const [filter, setFilter] = useState('all')
+
+  console.log('API Key:', API_KEY)
   
   // Issue 3: useEffect tanpa dependency array yang tepat
   useEffect(() => {
@@ -78,6 +81,7 @@ function App() {
       
       {/* Issue 11: Tidak ada label untuk accessibility */}
       <div className="input-section">
+        <label>To Do :</label>
         <input 
           type="text"
           value={input}
@@ -93,22 +97,23 @@ function App() {
       </div>
       
       {/* Issue 12: Inline styles (inconsistent dengan CSS file) */}
-      <div style={{ marginBottom: '20px', display: 'flex', gap: '10px' }}>
+      {/* move all style to CSS file */}
+      <div className='button-grup-style'>
         <button 
           onClick={() => setFilter('all')}
-          style={{ background: filter === 'all' ? '#28a745' : '#007bff' }}
+          className={filter === 'all' ? 'btn-active' : 'btn'}
         >
           All
         </button>
         <button 
           onClick={() => setFilter('active')}
-          style={{ background: filter === 'active' ? '#28a745' : '#007bff' }}
+          className={filter === 'active' ? 'btn-active' : 'btn'}
         >
           Active
         </button>
         <button 
           onClick={() => setFilter('completed')}
-          style={{ background: filter === 'completed' ? '#28a745' : '#007bff' }}
+          className={filter === 'completed' ? 'btn-active' : 'btn'}
         >
           Completed
         </button>
@@ -116,7 +121,8 @@ function App() {
       
       <div className="todo-list">
         {/* Issue 13: Tidak ada handling untuk empty state */}
-        {getFilteredTodos().map((todo) => (
+        {/* add condition : length must be > 0 to render getFilteredTodos*/}
+        {getFilteredTodos.length > 0  && getFilteredTodos().map((todo) => (
           // Issue 14: Key menggunakan index bisa lebih baik dengan ID
           <div key={todo.id} className={`todo-item ${todo.completed ? 'completed' : ''}`}>
             <input 
@@ -142,7 +148,6 @@ function App() {
       
       {/* Issue 16: Debug code yang tertinggal */}
       {console.log('Rendering with todos:', todos)}
-      {console.log('API Key:', API_KEY)}
     </div>
   )
 }

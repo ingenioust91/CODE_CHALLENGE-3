@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo } from 'react'
+import { useState, useEffect, useMemo, useCallback } from 'react'
 
 // Issue 1: Inline API key (security issue)
 // ✨move API_KEY to .env -> use import.meta.env for vite
@@ -6,6 +6,7 @@ const API_KEY = import.meta.env.VITE_API_KEY
 
 function App() {
   // Issue 2: State management bisa lebih baik
+  //✨
   const [todos, setTodos] = useState([])
   const [input, setInput] = useState('')
   const [filter, setFilter] = useState('all')
@@ -31,7 +32,8 @@ function App() {
   },[todos])
   
   // Issue 5: Function yang tidak di-memoize, re-create setiap render
-  const addTodo = () => {
+  //✨useCallBack -> Memoization for function
+  const addTodo = useCallback(()=>{
     if (input.trim() === '') {
       alert('Please enter a todo')
       return
@@ -46,15 +48,14 @@ function App() {
       createdAt: new Date().toISOString()
     }
     
-    setTodos([...todos, newTodo])
-    
+    setTodos(prev=>[...prev, newTodo])
     setInput('')
-  }
+  },[input])
   
   // Issue 7: Tidak ada error handling
+  //✨no need error handling
   const deleteTodo = (id) => {
     setTodos(todos.filter(todo => todo.id !== id))
-    
   }
   
   const toggleTodo = (id) => {
@@ -164,7 +165,7 @@ function App() {
       </div>
       
       {/* Issue 16: Debug code yang tertinggal */}
-      {console.log('Rendering with todos:', todos)}
+      {/* ✨erase debug code*/}
     </div>
   )
 }
